@@ -50,5 +50,3 @@ async function addContact(objData) {
 }
 
 export { listContacts, getContactById, removeContact, addContact, updateById };
-
-console.log(listContacts());

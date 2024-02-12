@@ -7,9 +7,11 @@ import {
 } from "../services/contactsServices.js";
 import HttpError from "../helpers/HttpError.js";
 import {
+  bodySchema,
   createContactSchema,
   updateContactSchema,
 } from "../schemas/contactsSchemas.js";
+import validateBody from "../helpers/validateBody.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -61,10 +63,16 @@ export const createContact = async (req, res, next) => {
 
 export const updateContact = async (req, res, next) => {
   try {
-    const validCreate = createContactSchema.validate(req.body);
-    if (validCreate.error) {
-      throw HttpError(400, "Body must have at least one field");
-    }
+    await new Promise((resolve, reject) => {
+      validateBody(bodySchema)(req, res, (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+
     const validUpdate = updateContactSchema.validate(req.body);
     if (validUpdate.error) {
       throw HttpError(
