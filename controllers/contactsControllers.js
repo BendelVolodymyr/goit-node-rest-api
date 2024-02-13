@@ -6,12 +6,6 @@ import {
   updateById,
 } from "../services/contactsServices.js";
 import HttpError from "../helpers/HttpError.js";
-import {
-  bodySchema,
-  createContactSchema,
-  updateContactSchema,
-} from "../schemas/contactsSchemas.js";
-import validateBody from "../helpers/validateBody.js";
 
 export const getAllContacts = async (req, res, next) => {
   try {
@@ -50,10 +44,6 @@ export const deleteContact = async (req, res, next) => {
 
 export const createContact = async (req, res, next) => {
   try {
-    const { error } = createContactSchema.validate(req.body);
-    if (error) {
-      throw HttpError(400);
-    }
     const result = await addContact(req.body);
     res.status(201).json(result);
   } catch (error) {
@@ -63,25 +53,17 @@ export const createContact = async (req, res, next) => {
 
 export const updateContact = async (req, res, next) => {
   try {
-    await new Promise((resolve, reject) => {
-      validateBody(bodySchema)(req, res, (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    const validUpdate = updateContactSchema.validate(req.body);
-    if (validUpdate.error) {
-      throw HttpError(
-        400,
-        "The name and phone number have a minimum of 3 letters, a maximum of 30! Domains 'com' and 'net'"
-      );
-    }
     const { id } = req.params;
-    const result = await updateById(id, req.body);
+    const { name, email, phone } = req.body;
+    const resultId = await getContactById(id);
+    if (!resultId) {
+      throw HttpError(404);
+    }
+    const result = await updateById(id, {
+      name: name || resultId.name,
+      email: email || resultId.email,
+      phone: phone || resultId.phone,
+    });
     if (!result) {
       throw HttpError(404);
     }

@@ -6,14 +6,6 @@ export const createContactSchema = Joi.object({
   phone: Joi.string().required(),
 });
 
-export const bodySchema = Joi.object({
-  name: Joi.string(),
-  email: Joi.string(),
-  phone: Joi.string(),
-})
-  .min(1)
-  .messages({ "object.min": "Body must have at least one field" });
-
 export const updateContactSchema = Joi.object({
   name: Joi.string().alphanum().min(3).max(30),
   email: Joi.string().email({
@@ -21,4 +13,6 @@ export const updateContactSchema = Joi.object({
     tlds: { allow: ["com", "net"] },
   }),
   phone: Joi.string().min(3).max(30),
-}).min(1);
+})
+  .min(1)
+  .messages({ "object.min": "Body must have at least one field" });
