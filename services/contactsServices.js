@@ -30,9 +30,12 @@ async function addContact(data) {
 }
 
 async function upStatusContact(id, data) {
-  const result = await Contact.findByIdAndUpdate(id, data, {
-    new: true,
-  });
+  const { favorite } = data;
+  const result = await Contact.findByIdAndUpdate(
+    id,
+    { favorite },
+    { new: true }
+  );
   return result;
 }
 
