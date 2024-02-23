@@ -1,15 +1,19 @@
 import { Schema, model } from "mongoose";
-import { handleMongooseError } from "../helpers/handleMongooseError.js";
+import { handleMongooseError } from "../middlewares/handleMongooseError.js";
 import Joi from "joi";
 
-export const createContactSchema = Joi.object({
+const createContactSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required(),
   phone: Joi.string().required(),
   favorite: Joi.boolean(),
 });
 
-export const updateContactSchema = Joi.object({
+const updateFavoriteSchema = Joi.object({
+  favorite: Joi.boolean().required(),
+});
+
+const updateContactSchema = Joi.object({
   name: Joi.string().alphanum().min(3).max(30),
   email: Joi.string().email({
     minDomainSegments: 2,
@@ -36,14 +40,21 @@ const contactSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
+    },
   },
   { versionKey: false }
 );
 
-export const updateFavoriteSchema = Joi.object({
-  favorite: Joi.boolean().required(),
-});
-
 contactSchema.post("save", handleMongooseError);
+
+export const schemasContact = {
+  createContactSchema,
+  updateFavoriteSchema,
+  updateContactSchema,
+};
 
 export const Contact = model("contact", contactSchema);

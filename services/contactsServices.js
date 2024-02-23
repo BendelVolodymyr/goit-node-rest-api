@@ -1,7 +1,18 @@
-import { Contact } from "../models/contact.js";
+import { Contact } from "../models/contactModels.js";
 
-async function listContacts() {
-  const data = await Contact.find();
+async function listContacts(obj, query) {
+  const { page = 1, limit = 10, favorite } = query;
+  const skip = (page - 1) * limit;
+
+  let filter = { ...obj };
+
+  if (favorite !== undefined) {
+    filter.favorite = favorite;
+  }
+  const data = await Contact.find(filter, "-owner", {
+    skip,
+    limit,
+  });
   return data;
 }
 
