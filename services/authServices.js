@@ -2,6 +2,7 @@ import { User } from "../models/usersModels.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import HttpError from "../middlewares/HttpError.js";
 
 const { SECRET_KEY } = process.env;
 
@@ -12,7 +13,7 @@ async function createUser(data) {
   const user = await User.findOne({ email });
 
   if (user) {
-    return 409;
+    throw HttpError(409, "Email in use");
   }
 
   const newUser = await User.create({ ...data, password: hashPassword });
@@ -22,14 +23,10 @@ async function createUser(data) {
 async function loginUser(data) {
   const { email, password } = data;
   const user = await User.findOne({ email });
-
-  if (!user) {
-    return 401;
-  }
-
   const passwordCompare = await bcrypt.compare(password, user.password);
-  if (!passwordCompare) {
-    return 401;
+
+  if (!user && !passwordCompare) {
+    throw HttpError(401, "Email or password is wrong");
   }
 
   const payload = { id: user._id };
@@ -50,9 +47,12 @@ async function logoutUser(_id) {
 }
 
 async function upSubscription(_id, data) {
-  const result = await User.findByIdAndUpdate(_id, data, { new: true }).select(
-    "subscription email"
-  );
+  const { subscription } = data;
+  const result = await User.findByIdAndUpdate(
+    _id,
+    { subscription },
+    { new: true }
+  ).select("subscription email");
   return result;
 }
 
