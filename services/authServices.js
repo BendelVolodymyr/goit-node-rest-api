@@ -2,7 +2,6 @@ import { User } from "../models/usersModels.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
-import HttpError from "../middlewares/HttpError.js";
 
 const { SECRET_KEY } = process.env;
 
@@ -12,21 +11,30 @@ async function createUser(data) {
   const hashPassword = await bcrypt.hash(password, 10);
   const user = await User.findOne({ email });
 
-  if (user) {
-    throw HttpError(409, "Email in use");
+  if (!user) {
+    const newUser = await User.create({ ...data, password: hashPassword });
+    return newUser;
+  } else {
+    const error = new Error("Email in use");
+    error.status = 409;
+    throw error;
   }
-
-  const newUser = await User.create({ ...data, password: hashPassword });
-  return newUser;
 }
 
 async function loginUser(data) {
   const { email, password } = data;
   const user = await User.findOne({ email });
+  if (!user) {
+    const error = new Error("Email or password is wrong");
+    error.status = 401;
+    throw error;
+  }
   const passwordCompare = await bcrypt.compare(password, user.password);
 
-  if (!user && !passwordCompare) {
-    throw HttpError(401, "Email or password is wrong");
+  if (!passwordCompare) {
+    const error = new Error("Email or password is wrong");
+    error.status = 401;
+    throw error;
   }
 
   const payload = { id: user._id };

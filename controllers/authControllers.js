@@ -11,18 +11,18 @@ export const register = async (req, res, next) => {
     const result = await createUser(req.body);
 
     if (result) {
-      if (result !== 409) {
-        const { email, subscription } = result;
-        const resultNewUser = { user: { email, subscription } };
-        res.status(201).json(resultNewUser);
-      } else {
-        throw HttpError(409, "Email in use");
-      }
+      const { email, subscription } = result;
+      const resultNewUser = { user: { email, subscription } };
+      res.status(201).json(resultNewUser);
     } else {
       throw HttpError(404);
     }
   } catch (error) {
-    next(error);
+    if (error.status !== 409) {
+      next(error);
+    } else {
+      next(HttpError(409, "Email in use"));
+    }
   }
 };
 
@@ -31,16 +31,16 @@ export const login = async (req, res, next) => {
     const resultUser = await loginUser(req.body);
 
     if (resultUser) {
-      if (resultUser !== 401) {
-        res.json(resultUser);
-      } else {
-        throw HttpError(401, "Email or password is wrong");
-      }
+      res.json(resultUser);
     } else {
       throw HttpError(404);
     }
   } catch (error) {
-    next(error);
+    if (error.status !== 401) {
+      next(error);
+    } else {
+      next(HttpError(401, "Email or password is wrong"));
+    }
   }
 };
 
