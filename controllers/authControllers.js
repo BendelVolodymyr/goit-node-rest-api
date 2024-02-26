@@ -1,3 +1,4 @@
+import HttpError from "../middlewares/HttpError.js";
 import {
   createUser,
   loginUser,
@@ -8,9 +9,18 @@ import {
 export const register = async (req, res, next) => {
   try {
     const result = await createUser(req.body);
-    const { email, subscription } = result;
-    const resultNewUser = { user: { email, subscription } };
-    res.status(201).json(resultNewUser);
+
+    if (result) {
+      if (result !== 409) {
+        const { email, subscription } = result;
+        const resultNewUser = { user: { email, subscription } };
+        res.status(201).json(resultNewUser);
+      } else {
+        throw HttpError(409, "Email in use");
+      }
+    } else {
+      throw HttpError(404);
+    }
   } catch (error) {
     next(error);
   }
@@ -19,7 +29,16 @@ export const register = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const resultUser = await loginUser(req.body);
-    res.json(resultUser);
+
+    if (resultUser) {
+      if (resultUser !== 401) {
+        res.json(resultUser);
+      } else {
+        throw HttpError(401, "Email or password is wrong");
+      }
+    } else {
+      throw HttpError(404);
+    }
   } catch (error) {
     next(error);
   }
