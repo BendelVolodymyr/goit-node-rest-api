@@ -2,6 +2,7 @@ import { User } from "../models/usersModels.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
+import gravatar from "gravatar";
 
 const { SECRET_KEY } = process.env;
 
@@ -11,8 +12,10 @@ async function createUser(data) {
   const hashPassword = await bcrypt.hash(password, 10);
   const user = await User.findOne({ email });
 
+  const avatarURL = gravatar.url(email);
+
   if (!user) {
-    const newUser = await User.create({ ...data, password: hashPassword });
+    const newUser = await User.create({ ...data, password: hashPassword, avatarURL, });
     return newUser;
   } else {
     const error = new Error("Email in use");
@@ -64,4 +67,8 @@ async function upSubscription(_id, data) {
   return result;
 }
 
-export { createUser, loginUser, logoutUser, upSubscription };
+async function upAvatar(id, avatarURL) {
+  await User.findByIdAndUpdate(id, { avatarURL });
+}
+
+export { createUser, loginUser, logoutUser, upSubscription, upAvatar };

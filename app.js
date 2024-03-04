@@ -7,7 +7,6 @@ import contactsRouter from "./routes/contactsRouter.js";
 import authRouter from "./routes/authRouter.js";
 
 const app = express();
-
 const { DB_HOST, PORT } = process.env;
 
 mongoose.set("strictQuery", true);
@@ -27,10 +26,10 @@ mongoose
 app.use(morgan("tiny"));
 app.use(cors());
 app.use(express.json());
+app.use("/avatars", express.static("public/avatars"));
 
 app.use("/users", authRouter);
 app.use("/api/contacts", contactsRouter);
-
 app.use((_, res) => {
   res.status(404).json({ message: "Route not found" });
 });
