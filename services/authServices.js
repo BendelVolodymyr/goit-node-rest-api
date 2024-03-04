@@ -12,29 +12,35 @@ async function createUser(data) {
   const hashPassword = await bcrypt.hash(password, 10);
   const user = await User.findOne({ email });
   const avatarURL = gravatar.url(email);
-  if (user) {
-    return 409;
-  }
 
-  const newUser = await User.create({
-    ...data,
-    password: hashPassword,
-    avatarURL,
-  });
-  return newUser;
+  if (!user) {
+    const newUser = await User.create({
+      ...data,
+      password: hashPassword,
+      avatarURL,
+    });
+    return newUser;
+  } else {
+    const error = new Error("Email in use");
+    error.status = 409;
+    throw error;
+  }
 }
 
 async function loginUser(data) {
   const { email, password } = data;
   const user = await User.findOne({ email });
-
   if (!user) {
-    return 401;
+    const error = new Error("Email or password is wrong");
+    error.status = 401;
+    throw error;
   }
-
   const passwordCompare = await bcrypt.compare(password, user.password);
+
   if (!passwordCompare) {
-    return 401;
+    const error = new Error("Email or password is wrong");
+    error.status = 401;
+    throw error;
   }
 
   const payload = { id: user._id };
@@ -55,9 +61,12 @@ async function logoutUser(_id) {
 }
 
 async function upSubscription(_id, data) {
-  const result = await User.findByIdAndUpdate(_id, data, { new: true }).select(
-    "subscription email"
-  );
+  const { subscription } = data;
+  const result = await User.findByIdAndUpdate(
+    _id,
+    { subscription },
+    { new: true }
+  ).select("subscription email");
   return result;
 }
 

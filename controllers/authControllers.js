@@ -18,17 +18,19 @@ export const register = async (req, res, next) => {
   try {
     const result = await createUser(req.body);
 
-    if (result === undefined || result === null) {
-      throw HttpError(404);
-    } else if (result === 409) {
-      throw HttpError(409, "Email in use");
-    } else {
+    if (result) {
       const { email, subscription } = result;
       const resultNewUser = { user: { email, subscription } };
       res.status(201).json(resultNewUser);
+    } else {
+      throw HttpError(404);
     }
   } catch (error) {
-    next(error);
+    if (error.status !== 409) {
+      next(error);
+    } else {
+      next(HttpError(409, "Email in use"));
+    }
   }
 };
 
@@ -36,16 +38,21 @@ export const login = async (req, res, next) => {
   try {
     const resultUser = await loginUser(req.body);
 
-    if (resultUser === 401) {
-      throw HttpError(401, "Email or password is wrong");
+    if (resultUser) {
+      res.json(resultUser);
+    } else {
+      throw HttpError(404);
     }
-    res.json(resultUser);
   } catch (error) {
-    next(error);
+    if (error.status !== 401) {
+      next(error);
+    } else {
+      next(HttpError(401, "Email or password is wrong"));
+    }
   }
 };
 
-export const getCurrent = async (req, res, next) => {
+export const getCurrent = async (req, res) => {
   const { email, subscription } = req.user;
   res.status(200).json({ email, subscription });
 };
