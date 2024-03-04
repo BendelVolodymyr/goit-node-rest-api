@@ -74,6 +74,10 @@ const usersSchema = new Schema(
       type: String,
       default: null,
     },
+    avatarURL: {
+      type: String,
+      required: true,
+    },
   },
   { versionKey: false }
 );
@@ -82,4 +86,4 @@ usersSchema.post("save", handleMongooseError);
 
 export const schemasUser = { registerSchema, loginSchema, subscriptionSchema };
 
-export const User = model("user", usersSchema);
+export const User = model("users", usersSchema);
