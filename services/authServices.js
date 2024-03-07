@@ -11,11 +11,14 @@ async function createUser(data) {
 
   const hashPassword = await bcrypt.hash(password, 10);
   const user = await User.findOne({ email });
-
   const avatarURL = gravatar.url(email);
 
   if (!user) {
-    const newUser = await User.create({ ...data, password: hashPassword, avatarURL, });
+    const newUser = await User.create({
+      ...data,
+      password: hashPassword,
+      avatarURL,
+    });
     return newUser;
   } else {
     const error = new Error("Email in use");
