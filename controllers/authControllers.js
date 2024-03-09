@@ -1,18 +1,20 @@
-import HttpError from "../middlewares/HttpError.js";
+import HttpError from '../middlewares/HttpError.js';
 import {
   createUser,
   loginUser,
   logoutUser,
+  resendVerificationEmail,
   upAvatar,
   upSubscription,
-} from "../services/authServices.js";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-import Jimp from "jimp";
+  verificationEmail,
+} from '../services/authServices.js';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import Jimp from 'jimp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const avatarsDir = path.join(__dirname, "../", "public", "avatars");
+const avatarsDir = path.join(__dirname, '../', 'public', 'avatars');
 
 export const register = async (req, res, next) => {
   try {
@@ -26,11 +28,7 @@ export const register = async (req, res, next) => {
       throw HttpError(404);
     }
   } catch (error) {
-    if (error.status !== 409) {
-      next(error);
-    } else {
-      next(HttpError(409, "Email in use"));
-    }
+    next(error);
   }
 };
 
@@ -44,11 +42,7 @@ export const login = async (req, res, next) => {
       throw HttpError(404);
     }
   } catch (error) {
-    if (error.status !== 401) {
-      next(error);
-    } else {
-      next(HttpError(401, "Email or password is wrong"));
-    }
+    next(error);
   }
 };
 
@@ -85,9 +79,31 @@ export const updateAvatar = async (req, res, next) => {
     const resultUpload = path.join(avatarsDir, filename);
     const image = await Jimp.read(tmpUpload);
     await image.resize(250, 250).writeAsync(resultUpload);
-    const avatarURL = path.join("avatars", filename);
+    const avatarURL = path.join('avatars', filename);
     await upAvatar(_id, avatarURL);
     res.status(200).json({ avatarURL });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    await verificationEmail(verificationToken);
+
+    res.status(200).json({ message: 'Verification successful' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resendVerifyEmail = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await resendVerificationEmail(email);
+
+    res.status(200).json({ message: 'Verification email sent' });
   } catch (error) {
     next(error);
   }
